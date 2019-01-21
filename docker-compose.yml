@@ -1,0 +1,39 @@
+version: '3'
+services:
+  mes:
+    build:
+      context: .
+      dockerfile: Dockerfile.mes
+      args:
+        MES_VERSION: 1.9.20
+        POSTGRES_PASSWORD: postgres123
+        REMOTE_HOST: database
+    networks:
+      - db-link
+    restart: always
+    depends_on:
+      - database
+    ports:
+      - "80:8080"
+  database:
+    build:
+      context: .
+      dockerfile: Dockerfile.postgres
+      args:
+        MES_VERSION: 1.9.20
+    networks:
+      - db-link
+    environment:
+      POSTGRES_PASSWORD: postgres123
+    restart: always
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+networks:
+  db-link:
+volumes:
+  db-data:

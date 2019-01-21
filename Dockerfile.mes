@@ -1,0 +1,14 @@
+FROM openjdk:8-jdk-alpine
+ARG MES_VERSION=1.9.20
+RUN wget https://github.com/qcadoo/mes/releases/download/${MES_VERSION}/qcadoo-mes-${MES_VERSION}.zip -O qcadoo-mes.zip
+RUN unzip qcadoo-mes.zip
+RUN rm qcadoo-mes.zip
+
+ARG POSTGRES_PASSWORD=postgres123
+ARG REMOTE_HOST=localhost
+WORKDIR /mes-application/qcadoo
+RUN sed -i "s/^dbJdbcUrl=.*$/dbJdbcUrl=jdbc:postgresql:\/\/${REMOTE_HOST}:5432\/mes/" db.properties
+RUN sed -i "s/^dbPassword=.*$/dbPassword=${POSTGRES_PASSWORD}/" db.properties
+
+WORKDIR /mes-application/bin
+CMD [ "./catalina.sh", "run" ]

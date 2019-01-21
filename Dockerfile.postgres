@@ -1,0 +1,14 @@
+FROM alpine as builder
+WORKDIR /workspace
+ARG MES_VERSION=1.9.20
+RUN wget https://github.com/qcadoo/mes/releases/download/${MES_VERSION}/qcadoo-mes-${MES_VERSION}.zip -O qcadoo-mes.zip
+RUN unzip qcadoo-mes.zip
+RUN echo "#!/bin/bash -e" > init-user-db.sh
+RUN echo "psql -U postgres < /workspace/create_db.sql" > init-user-db.sh
+RUN echo "psql -U postgres mes < /workspace/demo_db_en.sql" >> init-user-db.sh
+
+FROM postgres:9.5.4
+WORKDIR /workspace
+RUN echo "create database mes;" > create_db.sql
+COPY --from=builder /workspace/mes-application/webapps/ROOT/WEB-INF/classes/schema/demo_db_en.sql .
+COPY --from=builder /workspace/init-user-db.sh /docker-entrypoint-initdb.d
